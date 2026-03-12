@@ -281,20 +281,11 @@ jobs:
           append_runtime_env "REDIS_PASSWORD" "${REDIS_PASSWORD}"
           append_runtime_env "JUDGE_PROBLEM_EVENTS_QUEUE_URL" "${JUDGE_PROBLEM_EVENTS_QUEUE_URL}"
 
-          if [[ -n "${MONGODB_URI}" ]]; then
-            append_runtime_env "MONGODB_URI" "${MONGODB_URI}"
-          else
-            append_runtime_env "MONGODB_URI" "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin"
-          fi
-
-          # In containerized deployment, localhost points to the app container itself.
-          # Default Redis host/port to the redis service unless explicitly set otherwise.
-          if [[ -z "${REDIS_HOST:-}" || "${REDIS_HOST}" == "localhost" || "${REDIS_HOST}" == "127.0.0.1" ]]; then
-            append_runtime_env "REDIS_HOST" "redis"
-          else
-            append_runtime_env "REDIS_HOST" "${REDIS_HOST}"
-          fi
-          append_runtime_env "REDIS_PORT" "${REDIS_PORT:-6379}"
+          # Always use internal Docker DNS names for runtime dependencies.
+          # This prevents accidental localhost/external endpoint injection via APP_ENV_VARS.
+          append_runtime_env "MONGODB_URI" "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin"
+          append_runtime_env "REDIS_HOST" "redis"
+          append_runtime_env "REDIS_PORT" "6379"
 
           APP_DOCKER_NETWORK="${AWS_APP_NETWORK:-online-judge-net}"
           export APP_DOCKER_NETWORK IMAGE_URI
