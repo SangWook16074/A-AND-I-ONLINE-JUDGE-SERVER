@@ -222,6 +222,17 @@ jobs:
 
           app_env_keys=()
 
+          is_managed_runtime_key() {
+            case "$1" in
+              MONGODB_URI|SPRING_DATA_MONGODB_URI|REDIS_HOST|REDIS_PORT|SPRING_DATA_REDIS_HOST|SPRING_DATA_REDIS_PORT)
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
           has_env_key() {
             local target="$1"
             local item
@@ -266,9 +277,17 @@ jobs:
               fi
               key="${line%%=*}"
               value="${line#*=}"
+              if is_managed_runtime_key "${key}"; then
+                export "${key}=${value}"
+                continue
+              fi
               export "${key}=${value}"
               register_env_key "${key}"
             done <<< "${APP_ENV_VARS}"
+          fi
+
+          if [[ -n "${MONGODB_URI}" ]]; then
+            export MONGODB_URI
           fi
 
           append_runtime_env "JUDGE_JWT_AUTH_SIGNING_KEY" "${JUDGE_JWT_AUTH_SIGNING_KEY}" "true"
@@ -280,16 +299,6 @@ jobs:
           append_runtime_env "MONGODB_CONTAINER_NAME" "${MONGODB_CONTAINER_NAME}"
           append_runtime_env "REDIS_PASSWORD" "${REDIS_PASSWORD}"
           append_runtime_env "JUDGE_PROBLEM_EVENTS_QUEUE_URL" "${JUDGE_PROBLEM_EVENTS_QUEUE_URL}"
-
-          # Always use internal Docker DNS names for runtime dependencies.
-          # Also override Spring direct keys to prevent APP_ENV_VARS from injecting localhost endpoints.
-          INTERNAL_MONGODB_URI="mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin"
-          append_runtime_env "MONGODB_URI" "${INTERNAL_MONGODB_URI}"
-          append_runtime_env "SPRING_DATA_MONGODB_URI" "${INTERNAL_MONGODB_URI}"
-          append_runtime_env "REDIS_HOST" "redis"
-          append_runtime_env "REDIS_PORT" "6379"
-          append_runtime_env "SPRING_DATA_REDIS_HOST" "redis"
-          append_runtime_env "SPRING_DATA_REDIS_PORT" "6379"
 
           APP_DOCKER_NETWORK="${AWS_APP_NETWORK:-online-judge-net}"
           export APP_DOCKER_NETWORK IMAGE_URI
