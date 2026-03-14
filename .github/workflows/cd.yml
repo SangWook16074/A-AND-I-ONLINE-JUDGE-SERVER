@@ -278,6 +278,8 @@ jobs:
           append_runtime_env "MONGODB_PORT" "${MONGODB_PORT}"
           append_runtime_env "MONGODB_IMAGE" "${MONGODB_IMAGE}"
           append_runtime_env "MONGODB_CONTAINER_NAME" "${MONGODB_CONTAINER_NAME}"
+          append_runtime_env "REDIS_IMAGE" "${REDIS_IMAGE}"
+          append_runtime_env "REDIS_CONTAINER_NAME" "${REDIS_CONTAINER_NAME}"
           append_runtime_env "REDIS_PASSWORD" "${REDIS_PASSWORD}"
           append_runtime_env "JUDGE_PROBLEM_EVENTS_QUEUE_URL" "${JUDGE_PROBLEM_EVENTS_QUEUE_URL}"
 
@@ -346,6 +348,13 @@ jobs:
             for key in "${app_env_keys[@]}"; do
               printf '      - %s=${%s}\n' "${key}" "${key}"
             done
+            printf '%s\n' \
+              '      - MONGODB_URI=${MONGODB_URI:-mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin}' \
+              '      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin}' \
+              '      - REDIS_HOST=${REDIS_HOST:-redis}' \
+              '      - REDIS_PORT=${REDIS_PORT:-6379}' \
+              '      - SPRING_DATA_REDIS_HOST=${SPRING_DATA_REDIS_HOST:-redis}' \
+              '      - SPRING_DATA_REDIS_PORT=${SPRING_DATA_REDIS_PORT:-6379}'
             printf '%s\n' \
               'networks:' \
               '  app_net:' \
