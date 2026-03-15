@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@ConfigurationProperties(prefix = "app.openapi")
+@ConfigurationProperties(prefix = "judge.openapi")
 data class OpenApiProperties(
     val serverUrl: String = "",
 )
