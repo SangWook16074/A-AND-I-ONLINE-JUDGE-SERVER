@@ -14,6 +14,7 @@ data class CorsProperties(
         "http://localhost:*",
         "http://127.0.0.1:*",
         "https://aandiclub.com",
+        "https://api.aandiclub.com",
         "https://admin.aandiclub.com",
         "https://online.judge.aandiclub.com",
     ),
