@@ -19,9 +19,15 @@ data class CorsProperties(
         "https://online.judge.aandiclub.com",
     ),
     val apiAllowedMethods: List<String> = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"),
-    val allowedHeaders: List<String> = listOf("*"),
+    val allowedHeaders: List<String> = listOf(
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ),
     val exposedHeaders: List<String> = listOf("Location"),
-    val allowCredentials: Boolean = false,
+    val allowCredentials: Boolean = true,
     val maxAgeSeconds: Long = 3600,
 )
 
@@ -32,19 +38,12 @@ class CorsConfig(
 ) {
     @Bean
     fun corsWebFilter(): CorsWebFilter {
-        val apiConfiguration = corsConfiguration(
+        val configuration = corsConfiguration(
             allowedOriginPatterns = corsProperties.apiAllowedOriginPatterns,
             allowedMethods = corsProperties.apiAllowedMethods,
         )
-        val swaggerConfiguration = corsConfiguration(
-            allowedOriginPatterns = corsProperties.apiAllowedOriginPatterns,
-            allowedMethods = listOf("GET", "OPTIONS"),
-        )
         val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/v1/**", apiConfiguration)
-        source.registerCorsConfiguration("/v3/api-docs/**", swaggerConfiguration)
-        source.registerCorsConfiguration("/swagger-ui/**", swaggerConfiguration)
-        source.registerCorsConfiguration("/swagger-ui.html", swaggerConfiguration)
+        source.registerCorsConfiguration("/**", configuration)
         return CorsWebFilter(source)
     }
 
