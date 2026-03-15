@@ -128,6 +128,24 @@ jobs:
             -t "${IMAGE_URI}" \
             .
 
+      - name: Build and Push Sandbox Images (linux/arm64)
+        run: |
+          set -euo pipefail
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          for lang in python kotlin dart; do
+            echo "Building sandbox image for ${lang}..."
+            SANDBOX_IMAGE="${ECR_REGISTRY}/judge-sandbox-${lang}:latest"
+
+            docker buildx build \
+              --platform linux/arm64 \
+              --push \
+              -t "${SANDBOX_IMAGE}" \
+              "docker/sandbox/${lang}/"
+
+            echo "SANDBOX_IMAGE_${lang^^}=${SANDBOX_IMAGE}" >> "${GITHUB_ENV}"
+          done
+
       - name: Encode Runtime Values
         run: |
           set -euo pipefail
@@ -148,6 +166,9 @@ jobs:
           encode_and_export MONGODB_PORT
           encode_and_export MONGODB_IMAGE
           encode_and_export MONGODB_CONTAINER_NAME
+          encode_and_export SANDBOX_IMAGE_PYTHON
+          encode_and_export SANDBOX_IMAGE_KOTLIN
+          encode_and_export SANDBOX_IMAGE_DART
           encode_and_export REDIS_PASSWORD
           encode_and_export JUDGE_PROBLEM_EVENTS_QUEUE_URL
 
@@ -220,6 +241,9 @@ jobs:
           REDIS_PASSWORD="$(decode_b64 "${REDIS_PASSWORD_B64:-}")"
           JUDGE_PROBLEM_EVENTS_QUEUE_URL="$(decode_b64 "${JUDGE_PROBLEM_EVENTS_QUEUE_URL_B64:-}")"
           APP_OPENAPI_SERVER_URL="$(decode_b64 "${APP_OPENAPI_SERVER_URL_B64:-}")"
+          SANDBOX_IMAGE_PYTHON="$(decode_b64 "${SANDBOX_IMAGE_PYTHON_B64:-}")"
+          SANDBOX_IMAGE_KOTLIN="$(decode_b64 "${SANDBOX_IMAGE_KOTLIN_B64:-}")"
+          SANDBOX_IMAGE_DART="$(decode_b64 "${SANDBOX_IMAGE_DART_B64:-}")"
 
           app_env_keys=()
 
@@ -301,6 +325,9 @@ jobs:
           append_runtime_env "REDIS_PASSWORD" "${REDIS_PASSWORD}"
           append_runtime_env "JUDGE_PROBLEM_EVENTS_QUEUE_URL" "${JUDGE_PROBLEM_EVENTS_QUEUE_URL}"
           append_runtime_env "APP_OPENAPI_SERVER_URL" "${APP_OPENAPI_SERVER_URL}"
+          append_runtime_env "SANDBOX_IMAGE_PYTHON" "${SANDBOX_IMAGE_PYTHON}"
+          append_runtime_env "SANDBOX_IMAGE_KOTLIN" "${SANDBOX_IMAGE_KOTLIN}"
+          append_runtime_env "SANDBOX_IMAGE_DART" "${SANDBOX_IMAGE_DART}"
 
           if [[ -z "${IMAGE_URI:-}" ]]; then
             echo "IMAGE_URI is required"
@@ -395,6 +422,9 @@ jobs:
             compose_env_entry "REDIS_PORT" "${REDIS_PORT}"
             compose_env_entry "SPRING_DATA_REDIS_HOST" "${SPRING_DATA_REDIS_HOST}"
             compose_env_entry "SPRING_DATA_REDIS_PORT" "${SPRING_DATA_REDIS_PORT}"
+            compose_env_entry "SANDBOX_IMAGE_PYTHON" "judge-sandbox-python:latest"
+            compose_env_entry "SANDBOX_IMAGE_KOTLIN" "judge-sandbox-kotlin:latest"
+            compose_env_entry "SANDBOX_IMAGE_DART" "judge-sandbox-dart:latest"
             printf '%s\n' \
               'networks:' \
               '  app_net:'
@@ -409,5 +439,23 @@ jobs:
             | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
           docker compose -f "${AWS_APP_DIR}/docker-compose.yml" pull
+
+          # Pull and tag sandbox images
+          for lang in python kotlin dart; do
+            lang_upper="$(echo "${lang}" | tr '[:lower:]' '[:upper:]')"
+            ecr_image_var="SANDBOX_IMAGE_${lang_upper}"
+            ecr_image="${!ecr_image_var}"
+            local_tag="judge-sandbox-${lang}:latest"
+
+            if [[ -n "${ecr_image}" ]]; then
+              echo "Pulling sandbox image: ${ecr_image}"
+              docker pull "${ecr_image}"
+              docker tag "${ecr_image}" "${local_tag}"
+              echo "Tagged as ${local_tag}"
+            else
+              echo "Warning: ${ecr_image_var} not set, skipping ${lang} sandbox image"
+            fi
+          done
+
           docker compose -f "${AWS_APP_DIR}/docker-compose.yml" up -d --force-recreate mongodb redis app
           EOF
