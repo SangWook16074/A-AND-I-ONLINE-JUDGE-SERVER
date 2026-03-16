@@ -25,7 +25,7 @@ class AdminSubmissionControllerTest {
                 submitterPublicCode = "A00123",
                 problemId = "quiz-101",
                 language = Language.KOTLIN,
-                code = "fun main() = println(1)",
+                code = "fun solution(a: Int, b: Int): Int = a + b",
                 status = SubmissionStatus.ACCEPTED,
                 testCases = emptyList(),
                 createdAt = Instant.parse("2026-03-15T10:00:00Z"),

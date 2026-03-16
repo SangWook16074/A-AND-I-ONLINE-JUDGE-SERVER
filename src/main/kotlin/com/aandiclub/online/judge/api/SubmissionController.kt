@@ -85,7 +85,7 @@ class SubmissionController(
                         ExampleObject(
                             name = "kotlin-sum",
                             summary = "Kotlin solution for quiz-101",
-                            value = """{"publicCode":"A00123","problemId":"quiz-101","language":"KOTLIN","code":"fun main() {\n    val (a, b) = readln().split(\" \").map { it.toInt() }\n    println(a + b)\n}","options":{"realtimeFeedback":true}}""",
+                            value = """{"publicCode":"A00123","problemId":"quiz-101","language":"KOTLIN","code":"fun solution(a: Int, b: Int): Int = a + b","options":{"realtimeFeedback":true}}""",
                         ),
                         ExampleObject(
                             name = "dart-sum",

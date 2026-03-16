@@ -35,8 +35,8 @@ data class SubmissionRequest(
     @field:NotBlank
     @field:Size(max = 65_536)
     @field:Schema(
-        description = "Source code to compile or execute in the sandbox.",
-        example = "fun main() {\n    val (a, b) = readln().split(\" \").map { it.toInt() }\n    println(a + b)\n}",
+        description = "Source code to compile or execute in the sandbox. Kotlin and Dart submissions should define a `solution(...)` function that matches the problem input shape.",
+        example = "fun solution(a: Int, b: Int): Int = a + b",
     )
     val code: String,
     @field:Schema(description = "Execution and response options for this submission.")
