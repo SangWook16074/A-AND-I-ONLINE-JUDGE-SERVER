@@ -66,6 +66,13 @@ class SubmissionWorkflowE2ETest {
     @BeforeEach
     fun setup() {
         submissionRepository.deleteAll().block()
+
+        // Mock Redis operations for deduplication
+        val valueOps = io.mockk.mockk<org.springframework.data.redis.core.ReactiveValueOperations<String, String>>()
+        every { redisTemplate.opsForValue() } returns valueOps
+        every { valueOps.get(any()) } returns Mono.empty()
+        every { valueOps.set(any(), any(), any<java.time.Duration>()) } returns Mono.just(true)
+
         every { redisTemplate.convertAndSend(any(), any()) } returns Mono.just(1L)
         every { listenerContainer.receive(any<ChannelTopic>()) } returns Flux.empty()
         coEvery { sandboxRunner.run(any(), any<SandboxInput>()) } answers {
