@@ -35,6 +35,7 @@ import java.time.Duration
 @Service
 class SubmissionService(
     private val submissionRepository: SubmissionRepository,
+    private val userRepository: com.aandiclub.online.judge.repository.UserRepository,
     private val redisTemplate: ReactiveStringRedisTemplate,
     private val listenerContainer: ReactiveRedisMessageListenerContainer,
     private val judgeWorker: JudgeWorker,
@@ -55,9 +56,16 @@ class SubmissionService(
         request: SubmissionRequest,
         submitterId: String,
     ): SubmissionAccepted {
+        // Resolve User by publicCode
+        val user = userRepository.findByPublicCode(request.publicCode).awaitSingleOrNull()
+            ?: throw ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User not found with publicCode: ${request.publicCode}"
+            )
+
         // Check for duplicate submission within 5 minutes
         val codeHash = computeCodeHash(request.code)
-        val dedupKey = "submission:dedup:$submitterId:${request.problemId}:${request.language}:$codeHash"
+        val dedupKey = "submission:dedup:${user.userId}:${request.problemId}:${request.language}:$codeHash"
 
         val cachedSubmissionId = redisTemplate.opsForValue()
             .get(dedupKey)
@@ -73,7 +81,7 @@ class SubmissionService(
 
         // Create new submission
         val submission = Submission(
-            submitterId = submitterId,
+            submitterId = user.userId,
             submitterPublicCode = request.publicCode,
             problemId = request.problemId,
             language = request.language,

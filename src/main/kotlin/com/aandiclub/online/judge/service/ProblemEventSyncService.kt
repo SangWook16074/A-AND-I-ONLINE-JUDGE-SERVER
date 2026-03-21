@@ -18,6 +18,7 @@ enum class ProblemEventSyncOutcome {
 class ProblemEventSyncService(
     private val problemRepository: ProblemRepository,
     private val objectMapper: ObjectMapper,
+    private val testCaseEventPublisher: TestCaseEventPublisher?,
 ) {
     private val log = LoggerFactory.getLogger(ProblemEventSyncService::class.java)
 
@@ -29,6 +30,12 @@ class ProblemEventSyncService(
             }
 
         val payload = unwrapSnsEnvelope(root) ?: return ProblemEventSyncOutcome.SKIPPED
+
+        if (!shouldProcessEvent(payload)) {
+            log.debug("Skipping problem event: eventType not in allowed list")
+            return ProblemEventSyncOutcome.SKIPPED
+        }
+
         val problemId = extractProblemId(payload)
         if (problemId.isNullOrBlank()) {
             log.debug("Skipping problem event: no problem UUID field")
@@ -64,7 +71,22 @@ class ProblemEventSyncService(
         ).awaitSingle()
 
         log.info("Problem test cases upserted: problemId={}, cases={}", problemId, testCases.size)
+
+        testCaseEventPublisher?.publishTestCaseUpdated(problemId, testCases.size)
+
         return ProblemEventSyncOutcome.UPSERTED
+    }
+
+    private fun shouldProcessEvent(payload: JsonNode): Boolean {
+        val eventType = findFirst(payload, "eventType", "event_type", "type")
+            ?.asText()
+            ?: return true // eventType이 없으면 기본 처리 (하위 호환성)
+
+        return eventType in listOf(
+            "PROBLEM_CREATED",
+            "PROBLEM_UPDATED",
+            "TEST_CASE_UPDATED"
+        )
     }
 
     private fun unwrapSnsEnvelope(root: JsonNode): JsonNode? {
