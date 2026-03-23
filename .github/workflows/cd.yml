@@ -43,6 +43,8 @@ jobs:
       JUDGE_PROBLEM_EVENTS_PUBLISH_ENABLED: ${{ secrets.JUDGE_PROBLEM_EVENTS_PUBLISH_ENABLED }}
       JUDGE_PROBLEM_EVENTS_TOPIC_ARN: ${{ secrets.JUDGE_PROBLEM_EVENTS_TOPIC_ARN }}
       JUDGE_USER_EVENTS_QUEUE_URL: ${{ secrets.JUDGE_USER_EVENTS_QUEUE_URL }}
+      JUDGE_USER_EVENTS_ENABLED: ${{ secrets.JUDGE_USER_EVENTS_ENABLED }}
+      JUDGE_PROBLEM_EVENTS_ENABLED: ${{ secrets.JUDGE_PROBLEM_EVENTS_ENABLED }}
 
     steps:
       - name: Checkout
@@ -174,6 +176,8 @@ jobs:
           encode_and_export JUDGE_PROBLEM_EVENTS_PUBLISH_ENABLED
           encode_and_export JUDGE_PROBLEM_EVENTS_TOPIC_ARN
           encode_and_export JUDGE_USER_EVENTS_QUEUE_URL
+          encode_and_export JUDGE_USER_EVENTS_ENABLED
+          encode_and_export JUDGE_PROBLEM_EVENTS_ENABLED
 
       - name: Configure SSH
         run: |
@@ -336,6 +340,8 @@ jobs:
           append_runtime_env "JUDGE_PROBLEM_EVENTS_PUBLISH_ENABLED" "${JUDGE_PROBLEM_EVENTS_PUBLISH_ENABLED}"
           append_runtime_env "JUDGE_PROBLEM_EVENTS_TOPIC_ARN" "${JUDGE_PROBLEM_EVENTS_TOPIC_ARN}"
           append_runtime_env "JUDGE_USER_EVENTS_QUEUE_URL" "${JUDGE_USER_EVENTS_QUEUE_URL}"
+          append_runtime_env "JUDGE_USER_EVENTS_ENABLED" "${JUDGE_USER_EVENTS_ENABLED}"
+          append_runtime_env "JUDGE_PROBLEM_EVENTS_ENABLED" "${JUDGE_PROBLEM_EVENTS_ENABLED}"
           append_runtime_env "APP_OPENAPI_SERVER_URL" "${APP_OPENAPI_SERVER_URL}"
 
           if [[ -z "${IMAGE_URI:-}" ]]; then
