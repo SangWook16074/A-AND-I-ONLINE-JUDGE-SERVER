@@ -35,6 +35,7 @@ data class WorkerProperties(
     SandboxProperties::class,
     ProblemCatalogProperties::class,
     ProblemEventProperties::class,
+    UserEventProperties::class,
     JwtAuthProperties::class,
     RateLimitProperties::class,
     WorkerProperties::class,
