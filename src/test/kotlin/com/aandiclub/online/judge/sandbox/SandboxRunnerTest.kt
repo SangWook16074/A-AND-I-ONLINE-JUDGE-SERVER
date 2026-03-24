@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.lang.reflect.Method
 
 class SandboxRunnerTest {
 
@@ -95,5 +96,36 @@ class SandboxRunnerTest {
         )
         assertEquals(TestCaseStatus.COMPILE_ERROR, output.status)
         assertNotNull(output.error)
+    }
+
+    @Test
+    fun `parseRunnerOutput preserves numeric output types`() {
+        val result = parseRunnerOutput(
+            """{"output":2,"error":null,"timeMs":1.2,"memoryMb":0.5}""",
+            exitCode = 0,
+            language = Language.PYTHON,
+            externalMemoryMb = 0.0,
+        )
+
+        assertEquals(TestCaseStatus.PASSED, result.status)
+        assertEquals(2, result.output)
+        assertEquals(null, result.error)
+    }
+
+    private fun parseRunnerOutput(
+        rawOutput: String,
+        exitCode: Int,
+        language: Language,
+        externalMemoryMb: Double,
+    ): SandboxOutput {
+        val method: Method = SandboxRunner::class.java.getDeclaredMethod(
+            "parseRunnerOutput",
+            String::class.java,
+            Int::class.javaPrimitiveType,
+            Language::class.java,
+            Double::class.javaPrimitiveType,
+        )
+        method.isAccessible = true
+        return method.invoke(runner, rawOutput, exitCode, language, externalMemoryMb) as SandboxOutput
     }
 }

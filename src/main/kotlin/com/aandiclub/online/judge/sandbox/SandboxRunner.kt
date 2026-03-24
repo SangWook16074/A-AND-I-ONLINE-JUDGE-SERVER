@@ -145,7 +145,7 @@ class SandboxRunner(
             @Suppress("UNCHECKED_CAST")
             val map = objectMapper.readValue(rawOutput, Map::class.java) as Map<String, Any?>
             val result = RunnerResult(
-                output = map["output"] as? String,
+                output = map["output"],
                 error = map["error"] as? String,
                 timeMs = (map["timeMs"] as? Number)?.toDouble() ?: 0.0,
                 memoryMb = (map["memoryMb"] as? Number)?.toDouble() ?: 0.0,
