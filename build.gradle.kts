@@ -1,3 +1,5 @@
+import java.util.concurrent.TimeUnit
+
 plugins {
 	kotlin("jvm") version "2.2.21"
 	kotlin("plugin.spring") version "2.2.21"
@@ -58,14 +60,18 @@ kotlin {
 tasks.withType<Test> {
 	useJUnitPlatform()
 
-	// Docker 가용성 자동 감지
-	val isDockerAvailable = try {
-		// Docker 소켓 파일 존재 여부 확인
-		val dockerSocket = file("/var/run/docker.sock")
-		dockerSocket.exists()
-	} catch (e: Exception) {
-		false
-	}
+	// Docker socket existence alone is not enough; the daemon must be reachable.
+	val isDockerAvailable = runCatching {
+		val process: Process = ProcessBuilder("docker", "info")
+			.redirectErrorStream(true)
+			.start()
+		if (!process.waitFor(5, TimeUnit.SECONDS)) {
+			process.destroyForcibly()
+			error("docker info timed out")
+		}
+		check(process.exitValue() == 0)
+		true
+	}.getOrDefault(false)
 
 	// Docker가 없거나 환경 변수로 명시적으로 스킵하면 E2E 테스트 제외
 	if (!isDockerAvailable || System.getenv("SKIP_E2E_TESTS") == "true") {
