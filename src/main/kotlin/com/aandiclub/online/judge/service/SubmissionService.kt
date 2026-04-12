@@ -30,6 +30,7 @@ import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.node.ObjectNode
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
@@ -228,7 +229,7 @@ class SubmissionService(
             ?: return payload
         if (!node.isObject) return payload
 
-        val maskedNode = node.deepCopy<tools.jackson.databind.node.ObjectNode>()
+        val maskedNode = (node as ObjectNode).deepCopy()
         maskedNode.put("output", HIDDEN_CASE_OUTPUT_MASK)
         return objectMapper.writeValueAsString(maskedNode)
     }
