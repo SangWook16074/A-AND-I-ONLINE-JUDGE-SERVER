@@ -288,7 +288,7 @@ jobs:
 
           is_managed_runtime_key() {
             case "$1" in
-              MONGODB_URI|SPRING_DATA_MONGODB_URI|REDIS_HOST|REDIS_PORT|SPRING_DATA_REDIS_HOST|SPRING_DATA_REDIS_PORT)
+              MONGODB_URI|SPRING_DATA_MONGODB_URI|REDIS_HOST|REDIS_PORT|SPRING_DATA_REDIS_HOST|SPRING_DATA_REDIS_PORT|SPRING_PROFILES_ACTIVE)
                 return 0
                 ;;
               *)
@@ -465,6 +465,7 @@ jobs:
             compose_env_entry "REDIS_PORT" "${REDIS_PORT}"
             compose_env_entry "SPRING_DATA_REDIS_HOST" "${SPRING_DATA_REDIS_HOST}"
             compose_env_entry "SPRING_DATA_REDIS_PORT" "${SPRING_DATA_REDIS_PORT}"
+            compose_env_entry "SPRING_PROFILES_ACTIVE" "prod"
             printf '%s\n' \
               'networks:' \
               '  app_net:'
