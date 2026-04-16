@@ -19,7 +19,7 @@ class ApiLogFactory(
 ) {
     fun create(exchange: ServerWebExchange, context: ApiLogContext): ApiLogEntry {
         val path = exchange.request.path.pathWithinApplication().value()
-        val route = exchange.getAttribute<String>(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)?.toString() ?: path
+        val route = exchange.getAttribute<Any>(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)?.toString() ?: path
         val statusCode = exchange.response.statusCode?.value() ?: 200
         val response = buildResponse(exchange, context, statusCode)
         val success = statusCode in 200..399 && response.success
