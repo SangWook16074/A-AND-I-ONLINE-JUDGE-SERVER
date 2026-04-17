@@ -42,6 +42,7 @@ class SubmissionEventPublisher(
 
         val event = mapOf(
             "eventType" to "JUDGE_COMPLETED",
+            "submissionId" to submissionId,
             "publicCode" to publicCode,
             "problemId" to problemId,
             "score" to score,

@@ -68,13 +68,17 @@ class JudgeWorker(
                 )
             )
             redisTemplate.convertAndSend(channel, donePayload).awaitSingle()
-            submissionEventPublisher?.publishJudgeCompleted(
-                submissionId = submission.id,
-                publicCode = submission.submitterPublicCode,
-                problemId = submission.problemId,
-                testCases = resolvedTestCases,
-                results = submission.testCaseResults,
-            )
+            if (submissionEventPublisher != null) {
+                submissionEventPublisher.publishJudgeCompleted(
+                    submissionId = submission.id,
+                    publicCode = submission.submitterPublicCode,
+                    problemId = submission.problemId,
+                    testCases = resolvedTestCases,
+                    results = submission.testCaseResults,
+                )
+            } else {
+                log.warn("SubmissionEventPublisher is not configured, skipping judge completed event: submissionId={}", submission.id)
+            }
             return@withContext
         }
 
@@ -122,13 +126,17 @@ class JudgeWorker(
             )
         )
         redisTemplate.convertAndSend(channel, donePayload).awaitSingle()
-        submissionEventPublisher?.publishJudgeCompleted(
-            submissionId = submission.id,
-            publicCode = submission.submitterPublicCode,
-            problemId = submission.problemId,
-            testCases = resolvedTestCases,
-            results = results,
-        )
+        if (submissionEventPublisher != null) {
+            submissionEventPublisher.publishJudgeCompleted(
+                submissionId = submission.id,
+                publicCode = submission.submitterPublicCode,
+                problemId = submission.problemId,
+                testCases = resolvedTestCases,
+                results = results,
+            )
+        } else {
+            log.warn("SubmissionEventPublisher is not configured, skipping judge completed event: submissionId={}", submission.id)
+        }
         Unit
     }
 
