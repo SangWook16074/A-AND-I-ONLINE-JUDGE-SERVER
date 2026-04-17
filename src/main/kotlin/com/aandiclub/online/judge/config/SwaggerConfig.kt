@@ -122,13 +122,20 @@ class SwaggerConfig(
     @Bean
     fun publicServerUrlOpenApiCustomizer(): OpenApiCustomizer = OpenApiCustomizer { openApi ->
         val publicServerUrl = openApiProperties.serverUrl.trim()
-        if (publicServerUrl.isBlank()) return@OpenApiCustomizer
 
-        openApi.servers = listOf(
-            Server()
-                .url(publicServerUrl)
-                .description("Public API"),
-        )
+        openApi.servers = if (publicServerUrl.isBlank()) {
+            listOf(
+                Server()
+                    .url("/")
+                    .description("Current origin"),
+            )
+        } else {
+            listOf(
+                Server()
+                    .url(publicServerUrl)
+                    .description("Configured by APP_OPENAPI_SERVER_URL"),
+            )
+        }
     }
 
     internal fun v2HeaderCustomizer(): OpenApiCustomizer = OpenApiCustomizer { openApi ->
