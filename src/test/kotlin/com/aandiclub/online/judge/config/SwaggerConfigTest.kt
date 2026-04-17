@@ -46,24 +46,24 @@ class SwaggerConfigTest {
     @Test
     fun `public server url overrides generated servers`() {
         val openApi = OpenAPI().servers(listOf(Server().url("http://10.0.0.12:8080")))
+        val configuredPublicUrl = "https://public.example.test"
 
         SwaggerConfig(
-            OpenApiProperties(serverUrl = "https://api.aandiclub.com"),
+            OpenApiProperties(serverUrl = configuredPublicUrl),
         ).publicServerUrlOpenApiCustomizer().customise(openApi)
 
-        assertEquals(listOf("https://api.aandiclub.com"), openApi.servers.map { it.url })
+        assertEquals(listOf(configuredPublicUrl), openApi.servers.map { it.url })
     }
 
     @Test
-    fun `blank public server url keeps generated servers intact`() {
-        val original = Server().url("http://10.0.0.12:8080")
-        val openApi = OpenAPI().servers(listOf(original))
+    fun `blank public server url falls back to current origin path`() {
+        val openApi = OpenAPI().servers(listOf(Server().url("http://10.0.0.12:8080")))
 
         SwaggerConfig(
             OpenApiProperties(serverUrl = " "),
         ).publicServerUrlOpenApiCustomizer().customise(openApi)
 
-        assertEquals(listOf("http://10.0.0.12:8080"), openApi.servers.map { it.url })
+        assertEquals(listOf("/"), openApi.servers.map { it.url })
     }
 
     @Test
